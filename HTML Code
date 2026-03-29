@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetailCo Inclusive Supply Chain – Executive Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface2: #f8f9fb;
+    --border: rgba(0,0,0,0.08);
+    --text1: #1a1a2e;
+    --text2: #4a5568;
+    --text3: #718096;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #0F6E56;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --teal: #0F6E56;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --r: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text1); font-size: 13px; }
+
+  /* TOP NAV */
+  .topnav { background: var(--green-dark); color: #fff; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; }
+  .topnav-brand { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+  .topnav-brand span { opacity: 0.6; font-weight: 400; margin-left: 8px; font-size: 12px; }
+  .topnav-tabs { display: flex; gap: 4px; }
+  .tab-btn { background: none; border: none; color: rgba(255,255,255,0.7); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.15s; }
+  .tab-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .tab-btn.active { background: rgba(255,255,255,0.2); color: #fff; font-weight: 500; }
+  .topnav-right { font-size: 11px; opacity: 0.6; }
+
+  /* LAYOUT */
+  .page { display: none; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* FILTERS BAR */
+  .filters-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-chip { border: 1px solid var(--border); background: var(--surface); border-radius: 20px; padding: 4px 12px; font-size: 11px; cursor: pointer; transition: all 0.15s; color: var(--text2); }
+  .filter-chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .filter-chip:hover:not(.active) { border-color: var(--green); color: var(--green); }
+  .separator { width: 1px; height: 20px; background: var(--border); }
+
+  /* KPI CARDS ROW */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-card { background: var(--surface); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, var(--green)); }
+  .kpi-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 24px; font-weight: 700; color: var(--text1); line-height: 1; margin-bottom: 4px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .kpi-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+  .badge-up { background: var(--green-light); color: var(--green-dark); }
+  .badge-down { background: var(--red-light); color: var(--red); }
+  .badge-warn { background: var(--amber-light); color: var(--amber); }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 14px; }
+
+  /* CHART CARDS */
+  .card { background: var(--surface); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text1); margin-bottom: 2px; }
+  .card-sub { font-size: 11px; color: var(--text3); margin-bottom: 14px; }
+  .card-title-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .card-badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+  .canvas-wrap { position: relative; width: 100%; }
+
+  /* SENTIMENT BARS */
+  .sentiment-grid { display: flex; flex-direction: column; gap: 10px; }
+  .sentiment-item { }
+  .sent-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .sent-bar-wrap { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 1px; }
+  .sent-bar-seg { transition: width 0.4s; height: 100%; }
+
+  /* QUOTE CARDS */
+  .quote-list { display: flex; flex-direction: column; gap: 8px; }
+  .quote-card { background: var(--surface2); border-left: 3px solid var(--accent, var(--green)); border-radius: 0 6px 6px 0; padding: 10px 12px; }
+  .quote-text { font-size: 11px; color: var(--text2); font-style: italic; line-height: 1.5; margin-bottom: 5px; }
+  .quote-author { font-size: 10px; color: var(--text3); font-weight: 600; }
+
+  /* BARRIER CARDS */
+  .barrier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .barrier-card { background: var(--surface2); border-radius: 8px; padding: 12px 14px; border: 1px solid var(--border); }
+  .barrier-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 8px; }
+  .barrier-name { font-size: 11px; font-weight: 600; color: var(--text1); margin-bottom: 3px; }
+  .barrier-desc { font-size: 10px; color: var(--text3); line-height: 1.4; }
+  .severity-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+  /* GANTT */
+  .gantt-wrap { overflow-x: auto; }
+  .gantt-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 700px; }
+  .gantt-table th { font-size: 10px; font-weight: 600; color: var(--text3); text-align: center; padding: 4px 2px; border-bottom: 1px solid var(--border); }
+  .gantt-table td { padding: 3px 4px; vertical-align: middle; }
+  .gantt-label { font-size: 11px; color: var(--text2); white-space: nowrap; padding-right: 8px; }
+  .gantt-phase { font-size: 10px; color: var(--text3); }
+  .gantt-cell { height: 20px; }
+  .gantt-bar { height: 14px; border-radius: 3px; margin: 0 1px; }
+  .tr-stripe { background: var(--surface2); }
+
+  /* PROGRESS RING */
+  .progress-ring-wrap { display: flex; align-items: center; gap: 16px; }
+  .ring-labels { display: flex; flex-direction: column; gap: 8px; }
+  .ring-label-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+  .ring-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* TOOLTIP */
+  .tooltip { position: absolute; background: var(--text1); color: #fff; font-size: 11px; padding: 5px 9px; border-radius: 5px; pointer-events: none; display: none; z-index: 100; white-space: nowrap; }
+
+  /* OPPORTUNITY TABLE */
+  .opp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .opp-table th { font-size: 10px; font-weight: 600; color: var(--text3); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.3px; }
+  .opp-table td { padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+  .opp-table tr:last-child td { border-bottom: none; }
+  .opp-table tr:hover td { background: var(--surface2); }
+  .impact-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .impact-high { background: var(--green-light); color: var(--green-dark); }
+  .impact-med { background: var(--amber-light); color: var(--amber); }
+  .impact-low { background: var(--blue-light); color: var(--blue); }
+
+  /* SURVEY HEATMAP */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-table { width: 100%; border-collapse: separate; border-spacing: 2px; font-size: 10px; }
+  .heatmap-table th { font-size: 9px; color: var(--text3); padding: 3px 6px; text-align: center; font-weight: 600; }
+  .heatmap-table td.label { font-size: 10px; color: var(--text2); padding: 5px 8px 5px 0; text-align: right; max-width: 240px; line-height: 1.3; }
+  .hm-cell { width: 52px; height: 30px; border-radius: 4px; text-align: center; vertical-align: middle; font-weight: 600; font-size: 10px; cursor: default; transition: transform 0.15s; }
+  .hm-cell:hover { transform: scale(1.08); }
+
+  /* WATERFALL */
+  .wf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .wf-label { font-size: 11px; color: var(--text2); width: 180px; flex-shrink: 0; text-align: right; }
+  .wf-bar-wrap { flex: 1; display: flex; align-items: center; }
+  .wf-bar { height: 16px; border-radius: 3px; }
+  .wf-val { font-size: 11px; font-weight: 600; margin-left: 6px; color: var(--text2); }
+
+  /* SIDEBAR STATS */
+  .sidebar-stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .sidebar-stat:last-child { border-bottom: none; }
+  .ss-label { font-size: 11px; color: var(--text2); }
+  .ss-val { font-size: 13px; font-weight: 700; color: var(--text1); }
+  .ss-bar-wrap { height: 4px; background: var(--green-light); border-radius: 2px; margin-top: 4px; }
+  .ss-bar-fill { height: 100%; background: var(--green); border-radius: 2px; }
+
+  /* MINI SPARKLINE */
+  svg.spark { overflow: visible; }
+
+  /* SECTION HEADER */
+  .section-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .section-hdr-line { flex: 1; height: 1px; background: var(--border); }
+  .section-hdr-text { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+
+  /* SCORE RING */
+  .score-ring-row { display: flex; gap: 16px; align-items: stretch; justify-content: space-around; }
+  .score-ring-item { text-align: center; flex: 1; }
+  .score-num { font-size: 20px; font-weight: 700; }
+  .score-label { font-size: 10px; color: var(--text3); margin-top: 3px; line-height: 1.3; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 10px; color: var(--text3); margin-top: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-box { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: repeat(3, 1fr); }
+    .grid-2, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .barrier-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div class="topnav-brand">RetailCo <span>Inclusive Supply Chain Dashboard</span></div>
+  <div class="topnav-tabs">
+    <button class="tab-btn active" onclick="showPage('overview')">Overview</button>
+    <button class="tab-btn" onclick="showPage('survey')">Survey Insights</button>
+    <button class="tab-btn" onclick="showPage('interviews')">Stakeholder Voices</button>
+    <button class="tab-btn" onclick="showPage('roadmap')">Project Roadmap</button>
+    <button class="tab-btn" onclick="showPage('strategy')">Recommendations</button>
+  </div>
+  <div class="topnav-right">BCG · Confidential · 2024</div>
+</div>
+
+<!-- ===== PAGE 1: OVERVIEW ===== -->
+<div class="page active" id="page-overview">
+
+  <div class="filters-bar">
+    <span class="filter-label">View</span>
+    <span class="filter-chip active">All Stakeholders</span>
+    <span class="filter-chip">Procurement Exec</span>
+    <span class="filter-chip">MWBE Owners</span>
+    <div class="separator"></div>
+    <span class="filter-label">Initiative</span>
+    <span class="filter-chip active">MWBE Supplier %</span>
+    <span class="filter-chip active">$25M CDFI Fund</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card" style="--accent:#1D9E75">
+      <div class="kpi-label">Target MWBE Increase</div>
+      <div class="kpi-value">2×</div>
+      <div class="kpi-sub">Current supplier base <span class="kpi-badge badge-warn">↑ 100% goal</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#185FA5">
+      <div class="kpi-label">CDFI Investment Fund</div>
+      <div class="kpi-value">$25M</div>
+      <div class="kpi-sub">Targeted MWBE deployment <span class="kpi-badge badge-up">Approved</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#534AB7">
+      <div class="kpi-label">Project Timeline</div>
+      <div class="kpi-value">10 wks</div>
+      <div class="kpi-sub">Delivery of both outcomes <span class="kpi-badge badge-up">On track</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#A32D2D">
+      <div class="kpi-label">Financing Gap — MWBEs</div>
+      <div class="kpi-value">83%</div>
+      <div class="kpi-sub">Lack access to capital <span class="kpi-badge badge-down">Critical</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#BA7517">
+      <div class="kpi-label">Bias Experienced</div>
+      <div class="kpi-value">94%</div>
+      <div class="kpi-sub">MWBE owners report prejudice <span class="kpi-badge badge-down">High Risk</span></div>
+    </div>
+  </div>
+
+  <!-- Row 1 -->
+  <div class="grid-2-1">
+    <!-- Barrier Radar -->
+    <div class="card">
+      <div class="card-title-row">
+        <div>
+          <div class="card-title">Core Barrier Analysis</div>
+          <div class="card-sub">Perception gap: procurement vs MWBE owners (% agree/strongly agree)</div>
+        </div>
+        <span class="card-badge" style="background:var(--blue-light);color:var(--blue)">Survey Data</span>
+      </div>
+      <div class="canvas-wrap" style="height:220px">
+        <canvas id="radarChart"></canvas>
+      </div>
+      <div class="legend" style="justify-content:center">
+        <div class="legend-item"><div class="legend-box" style="background:#185FA5"></div>Procurement Execs</div>
+        <div class="legend-item"><div class="legend-box" style="background:#1D9E75"></div>MWBE Owners</div>
+      </div>
+    </div>
+
+    <!-- Score rings -->
+    <div class="card">
+      <div class="card-title">Readiness Index</div>
+      <div class="card-sub">Composite scores from survey data</div>
+      <div style="margin-bottom:12px">
+        <canvas id="readinessGauge" height="130"></canvas>
+      </div>
+      <div class="score-ring-row">
+        <div class="score-ring-item">
+          <div class="score-num" style="color:var(--red)">22%</div>
+          <div class="score-label">Actively track supplier diversity</div>
+        </div>
+        <div class="score-ring-item">
+          <div class="score-num" style="color:var(--amber)">25%</div>
+          <div class="score-label">Seek out MWBE suppliers</div>
+        </div>
+        <div class="score-ring-item">
+          <div class="score-num" style="color:var(--green)">58%</div>
+          <div class="score-label">MWBE performance = non-MWBE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="grid-3">
+    <!-- Financing landscape -->
+    <div class="card">
+      <div class="card-title-row">
+        <div>
+          <div class="card-title">Financing Confidence Gap</div>
+          <div class="card-sub">Access to capital — MWBE owners</div>
+        </div>
+      </div>
+      <div class="canvas-wrap" style="height:160px">
+        <canvas id="financeChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Social vs Financial -->
+    <div class="card">
+      <div class="card-title-row">
+        <div>
+          <div class="card-title">Perceived Impact of Diversity</div>
+          <div class="card-sub">% agreeing diversity helps each outcome</div>
+        </div>
+      </div>
+      <div class="canvas-wrap" style="height:160px">
+        <canvas id="impactChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Barrier severity -->
+    <div class="card">
+      <div class="card-title">Barrier Severity Map</div>
+      <div class="card-sub">By frequency across interviews</div>
+      <div class="barrier-grid">
+        <div class="barrier-card">
+          <div class="barrier-icon" style="background:var(--red-light)">🔗</div>
+          <div class="barrier-name"><span class="severity-dot" style="background:var(--red)"></span>Network Access</div>
+          <div class="barrier-desc">MWBEs lack connections to procurement buyers at large retailers</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon" style="background:var(--red-light)">💰</div>
+          <div class="barrier-name"><span class="severity-dot" style="background:var(--red)"></span>Financing Gaps</div>
+          <div class="barrier-desc">Unable to meet minimum order quantities; banks unwilling to extend credit</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon" style="background:var(--amber-light)">⚖️</div>
+          <div class="barrier-name"><span class="severity-dot" style="background:var(--amber)"></span>Unconscious Bias</div>
+          <div class="barrier-desc">Inconsistent standards applied across buyers; lack of bias training</div>
+        </div>
+        <div class="barrier-card">
+          <div class="barrier-icon" style="background:var(--amber-light)">📋</div>
+          <div class="barrier-name"><span class="severity-dot" style="background:var(--amber)"></span>Procurement Rules</div>
+          <div class="barrier-desc">Rigid standards optimized for large suppliers; exclude smaller MWBEs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 2: SURVEY INSIGHTS ===== -->
+<div class="page" id="page-survey">
+  <div class="section-hdr">
+    <div class="section-hdr-text">Procurement Executive Sentiment</div>
+    <div class="section-hdr-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Heatmap Procurement -->
+    <div class="card">
+      <div class="card-title">Procurement Executives — Likert Response Heatmap</div>
+      <div class="card-sub">Share of respondents per response category</div>
+      <div class="heatmap-wrap">
+        <table class="heatmap-table" id="heatmap-proc"></table>
+      </div>
+    </div>
+    <!-- Heatmap MWBE -->
+    <div class="card">
+      <div class="card-title">MWBE Owners — Likert Response Heatmap</div>
+      <div class="card-sub">Share of respondents per response category</div>
+      <div class="heatmap-wrap">
+        <table class="heatmap-table" id="heatmap-mwbe"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Stacked bar comparison -->
+    <div class="card">
+      <div class="card-title">Procurement: Key Statements — Response Distribution</div>
+      <div class="card-sub">Stacked positive vs negative sentiment</div>
+      <div class="canvas-wrap" style="height:300px">
+        <canvas id="stackedProcChart"></canvas>
+      </div>
+    </div>
+    <!-- MWBE bar -->
+    <div class="card">
+      <div class="card-title">MWBE Owners: Key Statements — Response Distribution</div>
+      <div class="card-sub">Stacked positive vs negative sentiment</div>
+      <div class="canvas-wrap" style="height:300px">
+        <canvas id="stackedMwbeChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Comparative Divergence: Shared Topics</div>
+    <div class="card-sub">How procurement execs vs MWBE owners view the same issues (% agree + strongly agree)</div>
+    <div class="canvas-wrap" style="height:200px">
+      <canvas id="divergenceChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 3: STAKEHOLDER VOICES ===== -->
+<div class="page" id="page-interviews">
+  <div class="grid-2">
+    <div>
+      <div class="section-hdr"><div class="section-hdr-text">Procurement Executives</div><div class="section-hdr-line"></div></div>
+      <div class="quote-list" style="--accent:#185FA5">
+        <div class="quote-card" style="border-left-color:#185FA5">
+          <div class="quote-text">"We are going to need to lean in and change our procurement standards to be fit for purpose. I'm willing and excited to do it, but we need to build a model that balances risk and reward."</div>
+          <div class="quote-author">John Jenkins — CPO, RetailCo</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#185FA5">
+          <div class="quote-text">"There wasn't really any difference in the product quality based on who the owner was — it just seemed that we were being approached by MWBEs much less, and those that did come seemed to struggle more with financing."</div>
+          <div class="quote-author">Albert McFarland — Director of Procurement, RetailCo</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#1D9E75">
+          <div class="quote-text">"It was definitely a challenge and a different type of risk to procure from smaller businesses that cannot supply the whole network of stores, so we had to develop a new, localized model to support MWBEs."</div>
+          <div class="quote-author">Stephanie Hernandez — Procurement Exec, RetailerA (Benchmark)</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#BA7517">
+          <div class="quote-text">"We found that MWBEs in particular had a tough time meeting our minimum order requirements, and it was almost always because they struggled to get the financing."</div>
+          <div class="quote-author">Natalie Hellman — Procurement Exec, RetailerB</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#A32D2D">
+          <div class="quote-text">"We did business with an MWBE a couple of years back. They promised us the world, assured us that they'd be a great partner, but things kind of imploded."</div>
+          <div class="quote-author">Lindsey Smith — Procurement Exec, RetailerC (Risk averse)</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-hdr"><div class="section-hdr-text">MWBE Owners & Leaders</div><div class="section-hdr-line"></div></div>
+      <div class="quote-list" style="--accent:#1D9E75">
+        <div class="quote-card" style="border-left-color:#1D9E75">
+          <div class="quote-text">"I just don't know where to start. Our stuff is awesome, well priced, customers love it, but I know that the network is huge in getting into big box stores, and I just don't have a great network."</div>
+          <div class="quote-author">Hayet King — Owner, Clothing Manufacturer</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#1D9E75">
+          <div class="quote-text">"I know our products are good — much better than what RetailCo is currently selling — but I can't really fly to the middle of nowhere for a 20-minute meeting with a junior buyer."</div>
+          <div class="quote-author">Samaya Housseini — Owner, Candle & Incense Manufacturer</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#A32D2D">
+          <div class="quote-text">"We aren't able to commit to the minimum order quantity that many of the big retailers want — we just don't have the working capital. Banks aren't willing to increase our credit line just yet."</div>
+          <div class="quote-author">Jarell Howell — CRO, Soft Drinks Manufacturer</div>
+        </div>
+        <div class="quote-card" style="border-left-color:#A32D2D">
+          <div class="quote-text">"I don't say this lightly, but it felt that we had to clear a bar that was a lot higher than others. I personally know other business owners who were given a much easier time, softer requirements."</div>
+          <div class="quote-author">Andy Bowman — Owner, Party Goods Manufacturer</div>
+        </div>
+      </div>
+
+      <!-- Sentiment analysis mini chart -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Interview Sentiment by Theme</div>
+        <div class="card-sub">Coded tone across all 9 interviews</div>
+        <div class="canvas-wrap" style="height:130px">
+          <canvas id="sentimentChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 4: ROADMAP ===== -->
+<div class="page" id="page-roadmap">
+  <div class="kpi-row" style="grid-template-columns: repeat(4,1fr)">
+    <div class="kpi-card" style="--accent:#1D9E75">
+      <div class="kpi-label">MWBE Supplier % Stream</div>
+      <div class="kpi-value">4</div>
+      <div class="kpi-sub">Phases: Research → Fact-base → Strategy → Roll-out</div>
+    </div>
+    <div class="kpi-card" style="--accent:#185FA5">
+      <div class="kpi-label">CDFI Investment Stream</div>
+      <div class="kpi-value">5</div>
+      <div class="kpi-sub">Phases: Research → Thesis → Fund Options → Shortlist → Select</div>
+    </div>
+    <div class="kpi-card" style="--accent:#534AB7">
+      <div class="kpi-label">Mid-point Readout</div>
+      <div class="kpi-value">Wk 5</div>
+      <div class="kpi-sub">Client leadership update — both streams</div>
+    </div>
+    <div class="kpi-card" style="--accent:#BA7517">
+      <div class="kpi-label">Final Deliverable</div>
+      <div class="kpi-value">Wk 10</div>
+      <div class="kpi-sub">Strategy + CDFI recommendation</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">10-Week Project Gantt — Both Workstreams</div>
+    <div class="card-sub">Click a phase to learn more</div>
+    <div class="gantt-wrap" style="margin-top:12px">
+      <table class="gantt-table">
+        <thead>
+          <tr>
+            <th style="width:130px;text-align:left">Sub-project</th>
+            <th style="width:100px;text-align:left">Phase</th>
+            <th colspan="5">Week 1–5</th>
+            <th colspan="5">Week 6–10</th>
+          </tr>
+          <tr>
+            <th></th><th></th>
+            <th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th>
+            <th>W6</th><th>W7</th><th>W8</th><th>W9</th><th>W10</th>
+          </tr>
+        </thead>
+        <tbody id="gantt-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">MWBE Supplier % — Activity Breakdown</div>
+      <div class="card-sub">Key activities per phase</div>
+      <div class="canvas-wrap" style="height:200px">
+        <canvas id="mwbePhaseChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">CDFI Investment — Activity Breakdown</div>
+      <div class="card-sub">Key activities per phase</div>
+      <div class="canvas-wrap" style="height:200px">
+        <canvas id="cdfiPhaseChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 5: RECOMMENDATIONS ===== -->
+<div class="page" id="page-strategy">
+
+  <div class="kpi-row" style="grid-template-columns: repeat(3,1fr)">
+    <div class="kpi-card" style="--accent:#1D9E75">
+      <div class="kpi-label">Priority 1 — Network</div>
+      <div class="kpi-value" style="font-size:16px">Outreach Program</div>
+      <div class="kpi-sub">Active MWBE sourcing & events. Impact: <span class="kpi-badge badge-up">High</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#185FA5">
+      <div class="kpi-label">Priority 2 — Financing</div>
+      <div class="kpi-value" style="font-size:16px">CDFI Partnership</div>
+      <div class="kpi-sub">$25M fund deployment. Impact: <span class="kpi-badge badge-up">High</span></div>
+    </div>
+    <div class="kpi-card" style="--accent:#534AB7">
+      <div class="kpi-label">Priority 3 — Procurement</div>
+      <div class="kpi-value" style="font-size:16px">Localized Model</div>
+      <div class="kpi-sub">Adapted standards for MWBEs. Impact: <span class="kpi-badge badge-up">High</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2-1">
+    <div class="card">
+      <div class="card-title">Strategic Opportunity Matrix</div>
+      <div class="card-sub">Impact vs ease of implementation</div>
+      <div class="canvas-wrap" style="height:260px">
+        <canvas id="matrixChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recommended Actions</div>
+      <div class="card-sub">Ranked by impact + feasibility</div>
+      <table class="opp-table">
+        <thead>
+          <tr><th>Action</th><th>Impact</th><th>Timeline</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Launch MWBE supplier portal</td><td><span class="impact-pill impact-high">High</span></td><td>Wk 8</td></tr>
+          <tr><td>Deploy $25M CDFI fund</td><td><span class="impact-pill impact-high">High</span></td><td>Wk 10</td></tr>
+          <tr><td>Revise minimum order rules</td><td><span class="impact-pill impact-high">High</span></td><td>Wk 9</td></tr>
+          <tr><td>Unconscious bias training</td><td><span class="impact-pill impact-med">Med</span></td><td>Wk 6</td></tr>
+          <tr><td>Supplier diversity tracking</td><td><span class="impact-pill impact-med">Med</span></td><td>Wk 4</td></tr>
+          <tr><td>Virtual pitch process</td><td><span class="impact-pill impact-low">Low</span></td><td>Wk 7</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">RetailerA Benchmark</div>
+      <div class="card-sub">Inclusive supply chain success story</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        <div class="sidebar-stat"><div><div class="ss-label">Awards Won</div><div class="ss-bar-wrap" style="width:80%"><div class="ss-bar-fill" style="width:90%"></div></div></div><div class="ss-val">Multiple</div></div>
+        <div class="sidebar-stat"><div><div class="ss-label">Financial Returns</div><div class="ss-bar-wrap" style="width:80%"><div class="ss-bar-fill" style="width:75%"></div></div></div><div class="ss-val">Positive</div></div>
+        <div class="sidebar-stat"><div><div class="ss-label">Model: Localized procurement</div><div class="ss-bar-wrap" style="width:80%"><div class="ss-bar-fill" style="width:100%"></div></div></div><div class="ss-val">Active</div></div>
+        <div class="sidebar-stat"><div><div class="ss-label">Financing support for MWBEs</div><div class="ss-bar-wrap" style="width:80%"><div class="ss-bar-fill" style="width:80%"></div></div></div><div class="ss-val">In place</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">MWBE Performance vs Non-MWBE</div>
+      <div class="card-sub">Once an agreement is in place (procurement exec survey)</div>
+      <div class="canvas-wrap" style="height:150px">
+        <canvas id="performChart"></canvas>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--green-dark);background:var(--green-light);padding:8px 10px;border-radius:6px;line-height:1.4">
+        <strong>58%</strong> of procurement execs agree MWBE suppliers perform as well or better — undermining the risk narrative.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Social Impact Consensus</div>
+      <div class="card-sub">% who believe diversity contributes positively to social outcomes</div>
+      <div class="canvas-wrap" style="height:150px">
+        <canvas id="socialChart"></canvas>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--blue);background:var(--blue-light);padding:8px 10px;border-radius:6px;line-height:1.4">
+        Strong consensus across both groups on social value — use this as a shared starting point for change.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// UTILITIES
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+document.querySelectorAll('.filter-chip').forEach(c => {
+  c.addEventListener('click', function() {
+    const siblings = this.parentElement.children;
+    // allow multi-select within filter groups separated by .separator
+    // simple toggle for demo
+    this.classList.toggle('active');
+  });
+});
+
+const GREEN = '#1D9E75', BLUE = '#185FA5', AMBER = '#BA7517', RED = '#A32D2D', PURPLE = '#534AB7', TEAL = '#0F6E56';
+const GREEN_L = 'rgba(29,158,117,0.15)', BLUE_L = 'rgba(24,95,165,0.15)', AMBER_L = 'rgba(186,117,23,0.15)', RED_L = 'rgba(163,45,45,0.15)';
+
+const defaultFont = { family: "'Segoe UI', system-ui, sans-serif", size: 11 };
+
+Chart.defaults.font = defaultFont;
+Chart.defaults.color = '#718096';
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.plugins.tooltip.backgroundColor = '#1a1a2e';
+Chart.defaults.plugins.tooltip.titleFont = { size: 11, weight: '600' };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 11 };
+Chart.defaults.plugins.tooltip.padding = 8;
+Chart.defaults.plugins.tooltip.cornerRadius = 6;
+
+// ============================================================
+// PAGE 1 CHARTS
+// ============================================================
+// Radar
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Track demographics', 'Actively seek MWBEs', 'Financing programs', 'Supplier diversity', 'Networking reliance'],
+    datasets: [
+      {
+        label: 'Procurement Execs',
+        data: [30, 25, 17, 21, 62],
+        borderColor: BLUE, backgroundColor: BLUE_L, borderWidth: 2, pointBackgroundColor: BLUE, pointRadius: 3
+      },
+      {
+        label: 'MWBE Owners',
+        data: [18, 11, 11, 18, 63],
+        borderColor: GREEN, backgroundColor: GREEN_L, borderWidth: 2, pointBackgroundColor: GREEN, pointRadius: 3
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        beginAtZero: true, max: 80, ticks: { display: false, stepSize: 20 },
+        pointLabels: { font: { size: 10 }, color: '#4a5568' },
+        grid: { color: 'rgba(0,0,0,0.06)' }, angleLines: { color: 'rgba(0,0,0,0.06)' }
+      }
+    }
+  }
+});
+
+// Readiness gauge (doughnut)
+new Chart(document.getElementById('readinessGauge'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Readiness', 'Gap'],
+    datasets: [{
+      data: [32, 68],
+      backgroundColor: [GREEN, 'rgba(0,0,0,0.06)'],
+      borderWidth: 0, borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '72%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false }
+    }
+  },
+  plugins: [{
+    id: 'center',
+    beforeDraw(chart) {
+      const { ctx, chartArea: { left, top, right, bottom } } = chart;
+      const cx = (left + right) / 2, cy = (top + bottom) / 2;
+      ctx.save();
+      ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#1a1a2e';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('32%', cx, cy - 6);
+      ctx.font = '10px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#718096';
+      ctx.fillText('Readiness', cx, cy + 10);
+      ctx.restore();
+    }
+  }]
+});
+
+// Finance
+new Chart(document.getElementById('financeChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Confident in min. order qty', 'Have access to capital', 'Retailers have financing programs'],
+    datasets: [{
+      label: '% Agree/Strongly Agree',
+      data: [38, 32, 11],
+      backgroundColor: [GREEN, AMBER, RED], borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.raw}% agree` } } },
+    scales: {
+      x: { max: 100, ticks: { callback: v => v + '%', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+      y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+    }
+  }
+});
+
+// Impact
+new Chart(document.getElementById('impactChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Risk reduction', 'Financial returns', 'Social outcomes'],
+    datasets: [
+      { label: 'Procurement Execs', data: [28, 35, 83], backgroundColor: BLUE, borderRadius: 3 },
+      { label: 'MWBE Owners', data: [39, 57, 93], backgroundColor: GREEN, borderRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+      y: { max: 100, ticks: { callback: v => v + '%', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } }
+    }
+  }
+});
+
+// ============================================================
+// PAGE 2: SURVEY HEATMAP
+// ============================================================
+const PROC_DATA = [
+  { label: 'Track demographic traits of suppliers', vals: [0.24, 0.40, 0.06, 0.12, 0.18] },
+  { label: 'Practices do not exclude based on demographics', vals: [0.02, 0.14, 0.20, 0.30, 0.34] },
+  { label: 'Actively seek out MWBE suppliers', vals: [0.20, 0.35, 0.20, 0.16, 0.09] },
+  { label: 'Supplier base is diverse and inclusive', vals: [0.07, 0.42, 0.30, 0.15, 0.06] },
+  { label: 'Rely on networking for new suppliers', vals: [0.09, 0.15, 0.14, 0.23, 0.39] },
+  { label: 'Participated in unconscious bias training (2yr)', vals: [0.19, 0.31, 0.03, 0.11, 0.36] },
+  { label: 'Programs to help MWBEs with financing', vals: [0.54, 0.26, 0.03, 0.10, 0.07] },
+  { label: 'MWBE performance ≥ non-MWBE', vals: [0.05, 0.16, 0.21, 0.37, 0.21] },
+  { label: 'Diversity minimizes supply chain risk', vals: [0.17, 0.27, 0.28, 0.15, 0.13] },
+  { label: 'Diversity contributes to financial outcomes', vals: [0.15, 0.28, 0.22, 0.24, 0.11] },
+  { label: 'Diversity contributes to social outcomes', vals: [0.02, 0.09, 0.06, 0.41, 0.42] }
+];
+const MWBE_DATA = [
+  { label: 'Target retailers have diverse supplier bases', vals: [0.23, 0.32, 0.27, 0.12, 0.06] },
+  { label: 'Retailers rely on networking for suppliers', vals: [0.07, 0.18, 0.12, 0.28, 0.35] },
+  { label: 'Strong network to reach retail buyers', vals: [0.18, 0.23, 0.22, 0.24, 0.13] },
+  { label: 'Confident to meet min. order qty', vals: [0.33, 0.19, 0.10, 0.19, 0.19] },
+  { label: 'Access to capital to compete', vals: [0.32, 0.31, 0.05, 0.21, 0.11] },
+  { label: 'Retailers have MWBE financing programs', vals: [0.64, 0.19, 0.06, 0.08, 0.03] },
+  { label: 'Diversity minimizes supply chain risk', vals: [0.07, 0.19, 0.35, 0.21, 0.18] },
+  { label: 'Diversity contributes to financial outcomes', vals: [0.05, 0.14, 0.24, 0.36, 0.21] },
+  { label: 'Diversity contributes to social outcomes', vals: [0.00, 0.00, 0.07, 0.12, 0.81] },
+  { label: 'Experienced bias/prejudice from retailers', vals: [0.00, 0.04, 0.02, 0.26, 0.68] }
+];
+const HM_LABELS = ['Strongly\nDisagree', 'Disagree', 'Neutral', 'Agree', 'Strongly\nAgree'];
+const HM_COLS = [
+  // SD, D, N, A, SA — diverging: red → amber → neutral → green
+  ['#FCEBEB','#A32D2D'], // SD
+  ['#FAEEDA','#BA7517'], // D
+  ['#f0f0f0','#888780'], // N
+  ['#E1F5EE','#0F6E56'], // A
+  ['#c0e8d8','#085041'], // SA
+];
+function buildHeatmap(tableId, data) {
+  const t = document.getElementById(tableId);
+  const thead = t.createTHead();
+  const hrow = thead.insertRow();
+  hrow.insertCell().textContent = '';
+  HM_LABELS.forEach(l => {
+    const th = document.createElement('th');
+    th.textContent = l.replace('\n', ' ');
+    hrow.appendChild(th);
+  });
+  const tbody = t.createTBody();
+  data.forEach((row, i) => {
+    const tr = tbody.insertRow();
+    const lc = tr.insertCell();
+    lc.className = 'label';
+    lc.textContent = row.label;
+    row.vals.forEach((v, j) => {
+      const td = tr.insertCell();
+      td.className = 'hm-cell';
+      const pct = Math.round(v * 100);
+      const alpha = 0.3 + v * 0.7;
+      td.style.background = HM_COLS[j][0];
+      td.style.opacity = (0.4 + v * 0.6).toFixed(2);
+      td.style.color = HM_COLS[j][1];
+      td.textContent = pct + '%';
+      td.title = HM_LABELS[j].replace('\n',' ') + ': ' + pct + '%';
+    });
+  });
+}
+buildHeatmap('heatmap-proc', PROC_DATA);
+buildHeatmap('heatmap-mwbe', MWBE_DATA);
+
+// Stacked bar - procurement
+const procLabels = PROC_DATA.map(d => d.label.length > 30 ? d.label.substring(0,30)+'…' : d.label);
+const mwbeLabels = MWBE_DATA.map(d => d.label.length > 30 ? d.label.substring(0,30)+'…' : d.label);
+
+new Chart(document.getElementById('stackedProcChart'), {
+  type: 'bar',
+  data: {
+    labels: procLabels,
+    datasets: [
+      { label: 'Strongly Disagree', data: PROC_DATA.map(d=>d.vals[0]*100), backgroundColor: '#A32D2D', stack: 'stack' },
+      { label: 'Disagree', data: PROC_DATA.map(d=>d.vals[1]*100), backgroundColor: '#E8A0A0', stack: 'stack' },
+      { label: 'Neutral', data: PROC_DATA.map(d=>d.vals[2]*100), backgroundColor: '#D3D1C7', stack: 'stack' },
+      { label: 'Agree', data: PROC_DATA.map(d=>d.vals[3]*100), backgroundColor: '#9FE1CB', stack: 'stack' },
+      { label: 'Strongly Agree', data: PROC_DATA.map(d=>d.vals[4]*100), backgroundColor: '#1D9E75', stack: 'stack' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${Math.round(c.raw)}%` } } },
+    scales: {
+      x: { stacked: true, max: 100, ticks: { callback: v=>v+'%', font:{size:10} }, grid:{color:'rgba(0,0,0,0.04)'} },
+      y: { stacked: true, ticks: { font:{size:9} }, grid:{display:false} }
+    }
+  }
+});
+
+new Chart(document.getElementById('stackedMwbeChart'), {
+  type: 'bar',
+  data: {
+    labels: mwbeLabels,
+    datasets: [
+      { label: 'Strongly Disagree', data: MWBE_DATA.map(d=>d.vals[0]*100), backgroundColor: '#A32D2D', stack: 'stack' },
+      { label: 'Disagree', data: MWBE_DATA.map(d=>d.vals[1]*100), backgroundColor: '#E8A0A0', stack: 'stack' },
+      { label: 'Neutral', data: MWBE_DATA.map(d=>d.vals[2]*100), backgroundColor: '#D3D1C7', stack: 'stack' },
+      { label: 'Agree', data: MWBE_DATA.map(d=>d.vals[3]*100), backgroundColor: '#9FE1CB', stack: 'stack' },
+      { label: 'Strongly Agree', data: MWBE_DATA.map(d=>d.vals[4]*100), backgroundColor: '#1D9E75', stack: 'stack' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${Math.round(c.raw)}%` } } },
+    scales: {
+      x: { stacked: true, max: 100, ticks: { callback: v=>v+'%', font:{size:10} }, grid:{color:'rgba(0,0,0,0.04)'} },
+      y: { stacked: true, ticks: { font:{size:9} }, grid:{display:false} }
+    }
+  }
+});
+
+// Divergence chart
+new Chart(document.getElementById('divergenceChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Retailers are diverse', 'Rely on networking', 'Financing programs exist', 'Diversity → financial outcomes', 'Diversity → social outcomes'],
+    datasets: [
+      { label: 'Procurement Execs (% agree)', data: [21, 62, 17, 35, 83], backgroundColor: BLUE, borderRadius: 3 },
+      { label: 'MWBE Owners (% agree)', data: [18, 63, 11, 57, 93], backgroundColor: GREEN, borderRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'top', labels: { boxWidth: 10, font:{size:10} } },
+      tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw}%` } }
+    },
+    scales: {
+      x: { ticks: { font:{size:10} }, grid:{display:false} },
+      y: { max: 100, ticks: { callback: v=>v+'%', font:{size:10} }, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  }
+});
+
+// ============================================================
+// PAGE 3: SENTIMENT CHART
+// ============================================================
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Financing', 'Networking', 'Bias/Prejudice', 'Procurement Rules', 'Quality/Performance'],
+    datasets: [
+      { label: 'Negative mentions', data: [-4, -3, -3, -3, -1], backgroundColor: RED, borderRadius: 3 },
+      { label: 'Positive mentions', data: [1, 1, 0, 1, 4], backgroundColor: GREEN, borderRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'top', labels: { boxWidth: 10, font:{size:10} } }
+    },
+    scales: {
+      x: { ticks:{font:{size:10}}, grid:{display:false} },
+      y: { ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'}, title:{display:true,text:'Interview mentions',font:{size:10}} }
+    }
+  }
+});
+
+// ============================================================
+// PAGE 4: ROADMAP / GANTT
+// ============================================================
+const ganttData = [
+  // [subproject, phase, w1,w2,w3,w4,w5,w6,w7,w8,w9,w10]
+  ['MWBE Supplier %', 'Research',    1,1,1,0,0,0,0,0,0,0, '#9FE1CB'],
+  ['MWBE Supplier %', 'Fact-base',   1,1,1,1,0,0,0,0,0,0, '#5DCAA5'],
+  ['MWBE Supplier %', 'Strategy',    0,0,0,0,1,1,1,0,0,0, '#1D9E75'],
+  ['MWBE Supplier %', 'Roll-out',    0,0,0,0,0,0,0,1,1,1, '#0F6E56'],
+  ['CDFI Investment', 'Research',    1,0,0,0,0,0,0,0,0,0, '#B5D4F4'],
+  ['CDFI Investment', 'Inv. Thesis', 0,1,1,0,0,0,0,0,0,0, '#378ADD'],
+  ['CDFI Investment', 'Fund Options',0,0,0,1,1,1,0,0,0,0, '#185FA5'],
+  ['CDFI Investment', 'Shortlist',   0,0,0,0,0,0,1,1,0,0, '#0C447C'],
+  ['CDFI Investment', 'Selection',   0,0,0,0,0,0,0,0,1,1, '#042C53'],
+];
+const tbody = document.getElementById('gantt-body');
+ganttData.forEach((row, i) => {
+  const tr = document.createElement('tr');
+  if (i % 2 === 0) tr.className = 'tr-stripe';
+  const lbl = document.createElement('td');
+  lbl.innerHTML = `<span class="gantt-label">${row[0]}</span>`;
+  tr.appendChild(lbl);
+  const phase = document.createElement('td');
+  phase.innerHTML = `<span class="gantt-phase">${row[1]}</span>`;
+  tr.appendChild(phase);
+  for (let w = 2; w <= 11; w++) {
+    const td = document.createElement('td');
+    td.className = 'gantt-cell';
+    if (row[w]) {
+      const bar = document.createElement('div');
+      bar.className = 'gantt-bar';
+      bar.style.background = row[12];
+      bar.style.width = '90%';
+      td.appendChild(bar);
+    }
+    tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+});
+
+// Week 5 midpoint line - add via a pseudo approach
+const mwbePhaseData = {
+  labels: ['Research', 'Fact-base', 'Strategy development', 'Roll-out'],
+  data: [3, 2, 4, 2],
+  colors: ['#9FE1CB', '#5DCAA5', '#1D9E75', '#0F6E56']
+};
+new Chart(document.getElementById('mwbePhaseChart'), {
+  type: 'bar',
+  data: {
+    labels: mwbePhaseData.labels,
+    datasets: [{ label: 'Activities', data: mwbePhaseData.data, backgroundColor: mwbePhaseData.colors, borderRadius: 5 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{display:false} },
+    scales: {
+      x: { ticks:{font:{size:10}}, grid:{display:false} },
+      y: { ticks:{stepSize:1, font:{size:10}}, title:{display:true, text:'# Activities',font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  }
+});
+
+new Chart(document.getElementById('cdfiPhaseChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Research', 'Investment Thesis', 'Fund Options', 'Shortlist', 'Selection'],
+    datasets: [{ label: 'Activities', data: [2, 3, 3, 2, 2], backgroundColor: ['#B5D4F4','#85B7EB','#378ADD','#185FA5','#0C447C'], borderRadius: 5 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{display:false} },
+    scales: {
+      x: { ticks:{font:{size:10}}, grid:{display:false} },
+      y: { ticks:{stepSize:1, font:{size:10}}, title:{display:true, text:'# Activities',font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  }
+});
+
+// ============================================================
+// PAGE 5: RECOMMENDATIONS
+// ============================================================
+new Chart(document.getElementById('matrixChart'), {
+  type: 'bubble',
+  data: {
+    datasets: [
+      { label: 'MWBE Outreach Program', data: [{x:75,y:85,r:14}], backgroundColor: GREEN+'cc' },
+      { label: 'CDFI Fund Deployment', data: [{x:60,y:90,r:16}], backgroundColor: BLUE+'cc' },
+      { label: 'Procurement Rule Revision', data: [{x:55,y:78,r:13}], backgroundColor: PURPLE+'cc' },
+      { label: 'Bias Training', data: [{x:80,y:55,r:9}], backgroundColor: AMBER+'cc' },
+      { label: 'Supplier Diversity Tracking', data: [{x:85,y:50,r:8}], backgroundColor: TEAL+'cc' },
+      { label: 'Virtual Pitch Process', data: [{x:90,y:40,r:7}], backgroundColor: '#B5D4F4' },
+      { label: 'Financing Support Model', data: [{x:45,y:88,r:15}], backgroundColor: RED+'cc' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'right', labels: { boxWidth: 10, font:{size:9}, padding:8 } },
+      tooltip: { callbacks: { label: c => ` ${c.dataset.label}: Impact ${c.raw.y}, Ease ${c.raw.x}` } }
+    },
+    scales: {
+      x: { min: 20, max: 100, title:{display:true, text:'Ease of Implementation →',font:{size:10}}, ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} },
+      y: { min: 20, max: 100, title:{display:true, text:'Strategic Impact →',font:{size:10}}, ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  }
+});
+
+new Chart(document.getElementById('performChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Agree/Strongly Agree', 'Neutral', 'Disagree/Strongly Disagree'],
+    datasets: [{ data: [58, 21, 21], backgroundColor: [GREEN, '#D3D1C7', RED], borderWidth: 0, borderRadius: 3 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: { display: true, position: 'right', labels:{boxWidth:10, font:{size:9}, padding:6} },
+      tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw}%` } }
+    }
+  }
+});
+
+new Chart(document.getElementById('socialChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Procurement\nExecs', 'MWBE\nOwners'],
+    datasets: [{ data: [83, 93], backgroundColor: [BLUE, GREEN], borderRadius: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}% agree`}} },
+    scales: {
+      x: { ticks:{font:{size:11}}, grid:{display:false} },
+      y: { max:100, ticks:{callback:v=>v+'%',font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -55,6 +55,7 @@ The most important finding wasn't a number   it was a reframe. RetailCo's MWBE p
 
 
 ✨ Why This Project Stands Out
+
 Real-world consulting-style case (BCG-inspired)
 Strong mix of strategy + analytics + execution
 Clear focus on impact, diversity, and innovation
